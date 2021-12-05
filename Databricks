@@ -1,0 +1,164 @@
+Databricks:
+
+
+URL : https://community.cloud.databricks.com/?o=74771872952220#
+
+
+In Databricks we use pyspark, they provide us cluster instances.
+
+Suppose you have huge amount of dataset then probabyly you want to distribute the data in parallel processing.
+you can distribute in triple cluster.
+
+Provide two ways for work:
+1) Community way: free
+
+2) Paid Version: Here we user azure, aws, gcp use in backend
+
+
+
+Databricks also help you to implement ml flow, this ml flow is with respect to the ci/cd pipelines.
+
+
+In official Term Databricks is : 
+An open and unified data analytics platform for data eng, data science, machine learning and analytics.
+ 
+ 
+It's use for Big Data File.
+
+In Free cluster you can work maximum 2 hours after that it willbe terminated
+
+DBU- Databricks Unit
+
+
+# DataBrciks code here: 
+# File location and type
+file_location = "/FileStore/tables/test3.csv"
+file_type = "csv"
+
+# CSV options
+infer_schema = "True"
+first_row_is_header = "false"
+delimiter = ","
+
+# The applied options are for CSV files. For other file types, these will be ignored.
+
+df = spark.read.csv(file_location, header=True, inferSchema= True)
+
+
+
+df.show()
+
+
+
+df.printSchema()
+
+
+
+df.printSchema()
+
+
+
+
+
+
+
+
+# Next Video(8)
+
+#Linear Regression
+
+
+file_location = "/FileStore/tables/Tips.csv"
+
+df= spark.read.csv(file_location, header= True, inferSchema=True)
+
+df.show()
+
+df.printSchema()
+
+df.columns
+
+
+# Now some columns we have in categorical format
+
+## Handling Categorical feature
+
+# In Sk learn we one hot encoding, ordinal encoding and all
+
+#Here in pyspark we have string indexer
+
+from pyspark.ml.feature import StringIndexer
+
+
+# Sex, smoker, day, time- Covert these feature
+
+df.columns
+
+
+indexer=StringIndexer(inputCol='sex', outputCol='sex_indexed')
+temp_df= indexer.fit(df).transform(df)
+temp_df.show()
+
+
+# So now we do this for all categorical columns
+
+#Ordinal Encoding
+
+indexer= StringIndexer(inputCols=['sex','smoker','day','time'], outputCols=['sex_indexed','smoker_indexed','day_indexed','time_indexed'])
+df=indexer.fit(df).transform(df)
+df.show()
+
+
+
+# So now we need to combine all these independent feature in one list
+#For this we will use Vector Assembler
+
+from pyspark.ml.feature import VectorAssembler
+
+featureAssembler= VectorAssembler(inputCols=['tip','size','sex_indexed','smoker_indexed', 'day_indexed', 'time_indexed'], outputCol='Independent Features')
+
+
+df=featureAssembler.transform(df)
+
+
+df.select('Independent Features').show()
+
+
+finalized_data = df.select(['Independent Features', 'total_bill'])
+finalized_data.show()
+
+
+
+
+from pyspark.ml.regression import RandomForestRegressor
+#Train_test Splitting
+train_data, test_data= finalized_data.randomSplit([.75, .25])
+
+
+
+
+regressor= LinearRegression(featuresCol='Independent Features', labelCol='total_bill')
+
+
+regressor= regressor.fit(train_data)
+
+regressor.coefficients
+
+regressor.intercept
+
+#Predictios
+
+pred= regressor.evaluate(test_data)
+
+#Final# Comparision
+
+pred.predictions.show()
+
+# Evaluation
+
+
+pred.r2, pred.meanAbsoluteError, pred.meanSquaredError
+
+
+
+
